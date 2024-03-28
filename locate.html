@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Display</title>
+    <!-- Include Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Include Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK79DYIs-lQHQftTl5JXrhwxm-mKwd0Q0&libraries=places"></script>
+    <style>
+        /* Set background image */
+        body {
+    background-image: url('car.jpg');
+    background-size: cover; /* Adjusted to cover */
+    background-repeat: no-repeat;
+}
+
+
+        /* Set map container size */
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+
+        #distance,
+        #fuelConsumption {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-3">Location Display</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <div id="map" class="mb-3"></div>
+            </div>
+            <div class="col-md-6">
+                <form>
+                    <div class="form-group">
+                        <label for="carSelect">Select Car:</label>
+                        <select class="form-control" id="carSelect">
+                            <option value="Toyota">Toyota</option>
+                            <option value="Honda">Honda</option>
+                            <option value="Ford">Ford</option>
+                            <option value="Chevrolet">Chevrolet</option>
+                            <option value="Nissan">Nissan</option>
+                            <option value="Volkswagen">Volkswagen</option>
+                            <option value="BMW">BMW</option>
+                            <option value="Mercedes-Benz">Mercedes-Benz</option>
+                            <option value="Audi">Audi</option>
+                            <option value="Subaru">Subaru</option>
+                        </select>
+                    </div>
+                </form>
+                <div id="fuelConsumption"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="distance" style="color: rgb(205, 219, 0); font-size: 20px;"></div>
+            </div>
+        </div>
+        
+        </div>
+    </div>
+
+    <script>
+        // Function to initialize Google Map
+        function initMap(coordinates) {
+            // Create map object
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: parseFloat(coordinates[0].lat), lng: parseFloat(coordinates[0].lng) }, // Set center to first coordinate
+                zoom: 8 // Set initial zoom level
+            });
+
+            // Define route coordinates array
+            var routeCoordinates = [];
+            // Extract coordinates from JSON and add to routeCoordinates array
+            for (var i = 0; i < coordinates.length; i++) {
+                routeCoordinates.push({ lat: parseFloat(coordinates[i].lat), lng: parseFloat(coordinates[i].lng) });
+            }
+
+            // Define route polyline
+            var routePolyline = new google.maps.Polyline({
+                path: routeCoordinates, // Set polyline path to route coordinates
+                geodesic: true, // Enable geodesic rendering
+                strokeColor: '#FF0000', // Set polyline color to red
+                strokeOpacity: 1.0, // Set polyline opacity
+                strokeWeight: 2 // Set polyline weight
+            });
+
+            // Add polyline to map
+            routePolyline.setMap(map);
+
+            // Request directions from Google Directions Service
+            var directionsService = new google.maps.DirectionsService();
+            var request = {
+                origin: routeCoordinates[0], // Start from the first coordinate
+                destination: routeCoordinates[routeCoordinates.length - 1], // End at the last coordinate
+                travelMode: 'DRIVING' // Request driving directions
+            };
+            directionsService.route(request, function(response, status) {
+                if (status === 'OK') {
+                    // Display the route on the map
+                    var directionsRenderer = new google.maps.DirectionsRenderer();
+                    directionsRenderer.setMap(map);
+                    directionsRenderer.setDirections(response);
+
+                    // Extract and display distance
+                    var distance = response.routes[0].legs[0].distance.text;
+                    document.getElementById('distance').textContent = 'Distance: ' + distance;
+
+                    // Calculate and display fuel consumption based on selected car
+                    var carSelect = document.getElementById('carSelect').value;
+                    var fuelConsumptionRate = getFuelConsumptionRate(carSelect);
+                    var distanceNumeric = parseFloat(distance.replace(' km', '')); // Convert distance to numeric value
+                    var totalFuelConsumption = distanceNumeric / fuelConsumptionRate;
+                    document.getElementById('fuelConsumption').textContent = 'Fuel Consumption: ' + totalFuelConsumption.toFixed(2) + ' Liters';
+                } else {
+                    console.error('Error:', status);
+                }
+            });
+        }
+
+        // Function to fetch coordinates from the server and initialize map
+        function fetchAndDisplayLocation() {
+            // Make a GET request to fetch coordinates from the server
+            fetch('gps.php')
+                .then(response => response.json())
+                .then(data => {                    initMap(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        // Function to get fuel consumption rate based on selected car
+        function getFuelConsumptionRate(car) {
+            // Default fuel consumption rate (km/L) for each car
+            var fuelConsumptionRates = {
+                'Toyota': 17.4,
+                'Honda': 19.5,
+                'Ford': 18.0,
+                'Chevrolet': 20.2,
+                'Nissan': 18.8,
+                'Volkswagen': 22.1,
+                'BMW': 15.6,
+                'Mercedes-Benz': 14.9,
+                'Audi': 16.2,
+                'Subaru': 18.3
+            };
+            return fuelConsumptionRates[car] || 17.4; // Return the fuel consumption rate for the selected car, default to 17.4 if not found
+        }
+
+        // Call fetchAndDisplayLocation function to display location when the page loads
+        fetchAndDisplayLocation();
+
+        // Add event listener to dropdown menu to update fuel consumption when car is selected
+        document.getElementById('carSelect').addEventListener('change', function() {
+            fetchAndDisplayLocation(); // Re-fetch location and update display when car is changed
+        });
+    </script>
+</body>
+</html>
+                   

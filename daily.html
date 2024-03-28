@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Records</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- Google Fonts - Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h2 class="text-center mb-0">Daily Records</h2>
+          </div>
+          <div class="card-body">
+            <button id="downloadPdfButton" class="btn btn-primary mb-3">Download PDF</button>
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Date & Time</th>
+                </tr>
+              </thead>
+              <tbody id="recordTableBody">
+                <!-- Records will be dynamically inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <script>
+    // Function to fetch user details from PHP server
+    async function fetchUserDetails() {
+      try {
+        // Fetch the current date and time
+        const currentDate = new Date();
+        const currentDateTime = currentDate.toLocaleString(); // Convert date to a localized string
+  
+        // Create a table row to display the current date and time
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td colspan="3" class="text-center">Current Date & Time: ${currentDateTime}</td>
+        `;
+  
+        // Append the row to the table body
+        const recordTableBody = document.getElementById('recordTableBody');
+        recordTableBody.appendChild(row);
+  
+        // Fetch user details from PHP server
+        const response = await fetch('d_record.php'); // Update URL to PHP endpoint
+        const data = await response.json();
+  
+        // Iterate over the user data and create table rows
+        data.forEach(record => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${record.first_name} ${record.second_name}</td> <!-- Combine first and second names -->
+            <td>${record.email}</td>
+            <td>${currentDateTime}</td> <!-- Display current date & time -->
+          `;
+          recordTableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    }
+  
+    // Call fetchUserDetails function when the page loads
+    fetchUserDetails();
+  
+    // Function to handle the click event on the download button
+    // Function to handle the click event on the download button
+document.getElementById('downloadPdfButton').addEventListener('click', async function () {
+  try {
+    // Send AJAX request to server to generate and download PDF
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'pdf.php', true);
+    xhr.responseType = 'blob'; // Response type is a binary blob (PDF)
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        // Create a blob URL for the PDF and initiate download
+        var blob = new Blob([xhr.response], { type: 'application/pdf' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'daily_records.pdf';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Error generating PDF: ' + xhr.statusText);
+      }
+    };
+    xhr.send();
+  } catch (error) {
+    console.error('Error downloading PDF:', error);
+  }
+});
+  </script>
+</body>
+</html>

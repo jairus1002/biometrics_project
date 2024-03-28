@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Page</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Custom font styles */
+    body {
+      font-family: Arial, sans-serif; /* Use Arial font as default */
+    }
+
+    h2 {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* Use Helvetica Neue font for headings */
+    }
+
+    p {
+      font-size: 16px; /* Set default font size for paragraphs */
+    }
+
+    /* Box for displaying scanned fingerprint */
+    #fingerPrintBox {
+      width: 200px;
+      height: 200px;
+      border: 2px solid #007bff; /* Bootstrap primary color */
+      border-radius: 10px;
+      text-align: center;
+      line-height: 200px; /* Center the text vertically */
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <h2 class="text-center mb-4">User Registration</h2>
+        <form action="user.php" method="post" id="registrationForm">
+          <input type="hidden" name="save" value="true">
+          <div class="form-group">
+            <label for="first_name">First Name</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Enter first name" required>
+          </div>
+          <div class="form-group">
+            <label for="second_name">Last Name</label>
+            <input type="text" class="form-control" id="second_name" name="second_name" placeholder="Enter last name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+          </div>
+          <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" class="form-control" id="department" name="department" placeholder="Enter department" required>
+          </div>
+          <div class="form-group">
+            <label for="fingerPrint">Fingerprint Registration</label>
+            <div class="form-group">
+              <button type="button" class="btn btn-primary btn-block" id="generateIDButton">Generate Fingerprint ID</button>
+              <div class="form-group unique-id">
+                <label for="fingerprintID">Fingerprint ID</label>
+                <input type="text" class="form-control" id="fingerprintID" readonly>
+              </div>
+            </div>
+            <!-- Button to generate fingerprint ID -->
+            <button type="submit" class="btn btn-success btn-block" id="registerButton" disabled>Register</button>
+          </div>
+        </form>
+        
+        <!-- Add a div to display registration status -->
+        <div id="registrationStatus" class="text-center"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('generateIDButton').addEventListener('click', function() {
+      // Get the form data
+      var email = document.getElementById('email').value;
+      var firstName = document.getElementById('first_name').value;
+      var secondName = document.getElementById('second_name').value;
+      var password = document.getElementById('password').value;
+      var department = document.getElementById('department').value;
+
+      // Make an AJAX request to the server to get the next available fingerprint ID
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+          if (xhr.status === 200) {
+            // Update the fingerprint ID input field with the received ID
+            document.getElementById('fingerprintID').value = xhr.responseText;
+
+            // Enable the register button
+            document.getElementById('registerButton').disabled = false;
+
+            // Display registration success message
+            document.getElementById('registrationStatus').innerHTML = '<div class="alert alert-success" role="alert">Registration successful. Redirecting to login page...</div>';
+
+            // Redirect to login page after a delay
+            setTimeout(function() {
+              window.location.href = 'login.html'; // Change the URL to your login page
+            }, 3000); // Redirect after 3 seconds (adjust as needed)
+          } else {
+            // Handle error response from the server
+            console.error('Error: ' + xhr.status);
+            // Display registration failure message
+            document.getElementById('registrationStatus').innerHTML = '<div class="alert alert-danger" role="alert">Error generating fingerprint ID. Please try again.</div>';
+          }
+        }
+      };
+      xhr.open('POST', 'user.php', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+      // Send parameters indicating request for generating fingerprint ID and the user details
+      xhr.send('generateID=true&email=' + encodeURIComponent(email) + '&first_name=' + encodeURIComponent(firstName) + '&second_name=' + encodeURIComponent(secondName) + '&password=' + encodeURIComponent(password) + '&department=' + encodeURIComponent(department));
+    });
+  </script>
+</body>
+</html>

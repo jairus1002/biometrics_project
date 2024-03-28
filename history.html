@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Details</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Registered Users</h2>
+    <div class="table-responsive"> <!-- Make the table responsive -->
+      <table class="table table-striped table-bordered">
+        <thead class="thead-dark"> <!-- Dark header -->
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Fingerprint Status</th> <!-- New column for fingerprint status -->
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <!-- User details will be dynamically added here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Function to fetch user details from PHP server
+    async function fetchUserDetails() {
+      try {
+        const response = await fetch('history.php'); // Update URL to PHP endpoint
+        const data = await response.json();
+        const userTableBody = document.getElementById('userTableBody');
+        
+        // Clear previous data in the table body
+        userTableBody.innerHTML = '';
+
+        // Iterate over the user data and create table rows
+        data.forEach(user => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${user.first_name} ${user.second_name}</td> <!-- Combine first and second names -->
+            <td>${user.email}</td>
+            <td>${user.department}</td>
+            <td>${user.fingerprint_status}</td> <!-- Display fingerprint status -->
+          `;
+          userTableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    }
+
+    // Call fetchUserDetails function when the page loads
+    fetchUserDetails();
+  </script>
+</body>
+</html>
